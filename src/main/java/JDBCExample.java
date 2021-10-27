@@ -15,6 +15,7 @@ public class JDBCExample {
         insertStatement.setString(2, lastname );
         insertStatement.setInt(3, age );
         insertStatement.execute();
+        insertStatement.close();
     }
 
     public static void changeLastName(String oldName, String newName) throws SQLException {
@@ -22,6 +23,7 @@ public class JDBCExample {
         updateStatement.setString(1, newName);
         updateStatement.setString(2, oldName);
         updateStatement.execute();
+        updateStatement.close();
     }
 
     public static void showAllPersons() throws SQLException {
@@ -39,12 +41,15 @@ public class JDBCExample {
                 System.out.println(", Age: " + sqlResult.getInt("age"));
             } while (sqlResult.next());
         }
+        selectStatement.close();
+        sqlResult.close();
     }
 
     public static void deletePerson(String lastName) throws SQLException {
         PreparedStatement deleteStatement = sqlConnection.prepareStatement("DELETE FROM persons WHERE lastname=?");
         deleteStatement.setString(1, lastName);
         deleteStatement.execute();
+        deleteStatement.close();
     }
 
     public static void main(String[] args) throws ClassNotFoundException, SQLException {
@@ -95,11 +100,14 @@ public class JDBCExample {
             String badName = "TEST'; TRUNCATE persons;-- '";
             Statement badStatement = sqlConnection.createStatement();
             badStatement.execute("UPDATE persons " +"SET lastname = '" + newLastName + "' " +"WHERE lastname ='" + badName+"'");
+            badStatement.close();
 
             // You wrote the code to retrieve all records from the persons table
             System.out.println();
             System.out.println("After SQL-Injection:");
             showAllPersons();
+
+            sqlConnection.close();
 
         } catch (SQLException e) {
             e.printStackTrace();
