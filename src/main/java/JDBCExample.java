@@ -91,10 +91,10 @@ public class JDBCExample {
             showAllPersons();
 
             // You attempted to write some bad SQL injection statements
-            String badName = "Person";
-            String newLastName = "TEST'; TRUNCATE persons;-- '";
+            String newLastName = "Person";
+            String badName = "TEST'; TRUNCATE persons;-- '";
             Statement badStatement = sqlConnection.createStatement();
-            badStatement.execute("UPDATE persons " +"SET lastname = '" + badName + "' " +"WHERE lastname ='" + newLastName+"'");
+            badStatement.execute("UPDATE persons " +"SET lastname = '" + newLastName + "' " +"WHERE lastname ='" + badName+"'");
 
             // You wrote the code to retrieve all records from the persons table
             System.out.println();
