@@ -54,8 +54,6 @@ public class JDBCExample {
 
     public static void main(String[] args) throws ClassNotFoundException, SQLException {
         try{
-            String driver = "com.mysql.cj.jdbc.Driver";
-            Class.forName(driver);
             // You wrote the code to connect to a database with JDBC
             sqlConnection = DriverManager.getConnection(DB, USER, PASSWORD);
 
