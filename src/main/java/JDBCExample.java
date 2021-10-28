@@ -97,6 +97,7 @@ public class JDBCExample {
             String newLastName = "Person";
             String badName = "Boys'; TRUNCATE persons;-- '";
             Statement badStatement = sqlConnection.createStatement();
+            System.out.println("Bad Query: "+"UPDATE persons " +"SET lastname = '" + newLastName + "' " +"WHERE lastname ='" + badName+"'");
             badStatement.execute("UPDATE persons " +"SET lastname = '" + newLastName + "' " +"WHERE lastname ='" + badName+"'");
             badStatement.close();
 
