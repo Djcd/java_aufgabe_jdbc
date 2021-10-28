@@ -95,7 +95,7 @@ public class JDBCExample {
 
             // You attempted to write some bad SQL injection statements
             String newLastName = "Person";
-            String badName = "TEST'; TRUNCATE persons;-- '";
+            String badName = "Boys'; TRUNCATE persons;-- '";
             Statement badStatement = sqlConnection.createStatement();
             badStatement.execute("UPDATE persons " +"SET lastname = '" + newLastName + "' " +"WHERE lastname ='" + badName+"'");
             badStatement.close();
