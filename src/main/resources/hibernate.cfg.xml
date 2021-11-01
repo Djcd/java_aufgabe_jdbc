@@ -26,8 +26,8 @@
             password
         </property>
 
-        <!-- List of XML mapping files -->
-        <mapping resource = "mappings/Person.hbm.xml"/>
+        <!-- Mappings -->
+        <mapping class="sql.Person"/>
 
     </session-factory>
 </hibernate-configuration>
