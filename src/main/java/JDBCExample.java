@@ -1,72 +1,95 @@
-import javax.swing.plaf.nimbus.State;
-import java.sql.*;
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.cfg.Configuration;
+import sql.Person;
+
+import java.util.List;
 
 public class JDBCExample {
 
-    // Use ?allowMultiQueries=true for showing an actual SQL Injection
-    static final String DB = "jdbc:mysql://localhost/jdbc?allowMultiQueries=true";
-    static final String USER = "root";
-    static final String PASSWORD = "**************";
-    static Connection sqlConnection;
+    private static SessionFactory factory;
 
-    public static void addPerson(String firstname, String lastname, int age) throws SQLException {
-        PreparedStatement insertStatement = sqlConnection.prepareStatement("INSERT INTO persons ( firstname, lastname, age ) VALUES ( ?, ?, ?)");
-        insertStatement.setString(1, firstname );
-        insertStatement.setString(2, lastname );
-        insertStatement.setInt(3, age );
-        insertStatement.execute();
-        insertStatement.close();
-    }
+    public static Person addPerson(String firstName, String lastName, int age){
+        Session session = factory.openSession();
+        Transaction tx = null;
+        Person person = null;
 
-    public static void changeLastName(String oldName, String newName) throws SQLException {
-        PreparedStatement updateStatement = sqlConnection.prepareStatement("UPDATE persons set lastname=? WHERE lastname=?");
-        updateStatement.setString(1, newName);
-        updateStatement.setString(2, oldName);
-        updateStatement.execute();
-        updateStatement.close();
-    }
-
-    public static void showAllPersons() throws SQLException {
-        Statement selectStatement = sqlConnection.createStatement();
-        String selectAll = "SELECT * FROM persons";
-        ResultSet sqlResult = selectStatement.executeQuery(selectAll);
-
-        if(!sqlResult.next()){
-            System.out.println("Table is empty!");
+        try {
+            tx = session.beginTransaction();
+            person = new Person(firstName, lastName, age);
+            session.save(person);
+            tx.commit();
+        } catch (HibernateException e) {
+            if (tx!=null) tx.rollback();
+            e.printStackTrace();
+        } finally {
+            session.close();
         }
-        else {
-            do {
-                System.out.print("Firstname: " + sqlResult.getString("firstname"));
-                System.out.print(", Lastname: " + sqlResult.getString("lastname"));
-                System.out.println(", Age: " + sqlResult.getInt("age"));
-            } while (sqlResult.next());
+        return person;
+    }
+
+    public static void showAllPersons(){
+        Transaction tx = null;
+        try (Session session = factory.openSession()) {
+            tx = session.beginTransaction();
+            List<Person> persons = session.createQuery("FROM Person").list();
+            for (Person p : persons) {
+                System.out.print("ID: " + p.getId());
+                System.out.print(" First Name: " + p.getFirstName());
+                System.out.print(" Last Name: " + p.getLastName());
+                System.out.println("  Age: " + p.getAge());
+            }
+            tx.commit();
+        } catch (HibernateException e) {
+            if (tx != null) tx.rollback();
+            e.printStackTrace();
         }
-        selectStatement.close();
-        sqlResult.close();
     }
 
-    public static void deletePerson(String lastName) throws SQLException {
-        PreparedStatement deleteStatement = sqlConnection.prepareStatement("DELETE FROM persons WHERE lastname=?");
-        deleteStatement.setString(1, lastName);
-        deleteStatement.execute();
-        deleteStatement.close();
+    public static void deletePerson(Person deletedPerson){
+        Transaction tx = null;
+
+        try (Session session = factory.openSession()) {
+            tx = session.beginTransaction();
+            session.delete(deletedPerson);
+            tx.commit();
+        } catch (HibernateException e) {
+            if (tx != null) tx.rollback();
+            e.printStackTrace();
+        }
     }
 
-    public static void main(String[] args) throws ClassNotFoundException, SQLException {
-        try{
-            // You wrote the code to connect to a database with JDBC
-            sqlConnection = DriverManager.getConnection(DB, USER, PASSWORD);
+    public static void updatePerson(Person updatedPerson){
+        Transaction tx = null;
+
+        try (Session session = factory.openSession()) {
+            tx = session.beginTransaction();
+            session.update(updatedPerson);
+            tx.commit();
+        } catch (HibernateException e) {
+            if (tx != null) tx.rollback();
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
+        try {
+            // You wrote the code to connect to a database with Hibernate
+            factory = new Configuration().configure().buildSessionFactory();
 
             // You wrote the code to insert new records in the persons table
-            addPerson("Paul", "Paulsen", 42);
-            addPerson("Cody", "Codeson", 55);
+            Person person1 = addPerson("Paul", "Paulsen", 42 );
+            Person person2 = addPerson("Cody", "Codeson", 55);
 
             // You wrote the code to retrieve all records from the persons table
             System.out.println("After adding Persons:");
             showAllPersons();
 
             // You wrote the code to update the lastname of one record in the persons table
-            changeLastName("Paulsen", "Choppy");
+            person1.setLastName("Choppy");
+            updatePerson(person1);
 
             // You wrote the code to retrieve all records from the persons table
             System.out.println();
@@ -74,42 +97,19 @@ public class JDBCExample {
             showAllPersons();
 
             // You wrote the code to delete two record from the persons table
-            deletePerson("Codeson");
-            deletePerson("Choppy");
+            deletePerson(person1);
+            deletePerson(person2);
+            person1 = null;
+            person2 = null;
 
             // You wrote the code to retrieve all records from the persons table
             System.out.println();
             System.out.println("After deletion:");
             showAllPersons();
 
-            // Add Person for SQL Injection Example
-            String lastName = "Boys";
-            String firstName = "Bad";
-            int age = 2;
-            addPerson("Bad", "Boys", 2);
-
-            // You wrote the code to retrieve all records from the persons table
-            System.out.println();
-            System.out.println("Before SQL-Injection:");
-            showAllPersons();
-
-            // You attempted to write some bad SQL injection statements
-            String newLastName = "Person";
-            String badName = "Boys'; TRUNCATE persons;-- '";
-            Statement badStatement = sqlConnection.createStatement();
-            System.out.println("Bad Query: "+"UPDATE persons " +"SET lastname = '" + newLastName + "' " +"WHERE lastname ='" + badName+"'");
-            badStatement.execute("UPDATE persons " +"SET lastname = '" + newLastName + "' " +"WHERE lastname ='" + badName+"'");
-            badStatement.close();
-
-            // You wrote the code to retrieve all records from the persons table
-            System.out.println();
-            System.out.println("After SQL-Injection:");
-            showAllPersons();
-
-            sqlConnection.close();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (Throwable ex) {
+            System.err.println("Failed to create sessionFactory object." + ex);
+            throw new ExceptionInInitializerError(ex);
         }
     }
 }
