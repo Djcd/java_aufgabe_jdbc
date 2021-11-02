@@ -1,4 +1,3 @@
-import javax.swing.plaf.nimbus.State;
 import java.sql.*;
 
 public class JDBCExample {
@@ -9,50 +8,71 @@ public class JDBCExample {
     static final String PASSWORD = "**************";
     static Connection sqlConnection;
 
-    public static void addPerson(String firstname, String lastname, int age) throws SQLException {
-        PreparedStatement insertStatement = sqlConnection.prepareStatement("INSERT INTO persons ( firstname, lastname, age ) VALUES ( ?, ?, ?)");
-        insertStatement.setString(1, firstname );
-        insertStatement.setString(2, lastname );
-        insertStatement.setInt(3, age );
-        insertStatement.execute();
-        insertStatement.close();
-    }
-
-    public static void changeLastName(String oldName, String newName) throws SQLException {
-        PreparedStatement updateStatement = sqlConnection.prepareStatement("UPDATE persons set lastname=? WHERE lastname=?");
-        updateStatement.setString(1, newName);
-        updateStatement.setString(2, oldName);
-        updateStatement.execute();
-        updateStatement.close();
-    }
-
-    public static void showAllPersons() throws SQLException {
-        Statement selectStatement = sqlConnection.createStatement();
-        String selectAll = "SELECT * FROM persons";
-        ResultSet sqlResult = selectStatement.executeQuery(selectAll);
-
-        if(!sqlResult.next()){
-            System.out.println("Table is empty!");
+    public static void addPerson(String firstname, String lastname, int age) {
+        PreparedStatement insertStatement;
+        try {
+            insertStatement = sqlConnection.prepareStatement("INSERT INTO persons ( firstname, lastname, age ) VALUES ( ?, ?, ?)");
+            insertStatement.setString(1, firstname );
+            insertStatement.setString(2, lastname );
+            insertStatement.setInt(3, age );
+            insertStatement.execute();
+            insertStatement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        else {
-            do {
-                System.out.print("Firstname: " + sqlResult.getString("firstname"));
-                System.out.print(", Lastname: " + sqlResult.getString("lastname"));
-                System.out.println(", Age: " + sqlResult.getInt("age"));
-            } while (sqlResult.next());
+    }
+
+    public static void changeLastName(String oldName, String newName) {
+        PreparedStatement updateStatement;
+        try {
+            updateStatement = sqlConnection.prepareStatement("UPDATE persons set lastname=? WHERE lastname=?");
+            updateStatement.setString(1, newName);
+            updateStatement.setString(2, oldName);
+            updateStatement.execute();
+            updateStatement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-        selectStatement.close();
-        sqlResult.close();
     }
 
-    public static void deletePerson(String lastName) throws SQLException {
-        PreparedStatement deleteStatement = sqlConnection.prepareStatement("DELETE FROM persons WHERE lastname=?");
-        deleteStatement.setString(1, lastName);
-        deleteStatement.execute();
-        deleteStatement.close();
+    public static void showAllPersons() {
+        Statement selectStatement;
+        try {
+            selectStatement = sqlConnection.createStatement();
+            String selectAll = "SELECT * FROM persons";
+            ResultSet sqlResult = selectStatement.executeQuery(selectAll);
+
+            if(!sqlResult.next()){
+                System.out.println("Table is empty!");
+            }
+            else {
+                do {
+                    System.out.print("Firstname: " + sqlResult.getString("firstname"));
+                    System.out.print(", Lastname: " + sqlResult.getString("lastname"));
+                    System.out.println(", Age: " + sqlResult.getInt("age"));
+                } while (sqlResult.next());
+            }
+            selectStatement.close();
+            sqlResult.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
 
-    public static void main(String[] args) throws ClassNotFoundException, SQLException {
+    public static void deletePerson(String lastName) {
+        PreparedStatement deleteStatement;
+        try {
+            deleteStatement = sqlConnection.prepareStatement("DELETE FROM persons WHERE lastname=?");
+            deleteStatement.setString(1, lastName);
+            deleteStatement.execute();
+            deleteStatement.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void main(String[] args) {
         try{
             // You wrote the code to connect to a database with JDBC
             sqlConnection = DriverManager.getConnection(DB, USER, PASSWORD);
@@ -83,9 +103,6 @@ public class JDBCExample {
             showAllPersons();
 
             // Add Person for SQL Injection Example
-            String lastName = "Boys";
-            String firstName = "Bad";
-            int age = 2;
             addPerson("Bad", "Boys", 2);
 
             // You wrote the code to retrieve all records from the persons table
